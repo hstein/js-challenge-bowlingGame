@@ -12,11 +12,12 @@
 
             this._settings = {
                                 "frameAmount": 10,
-                                "rollsPerFrame": 2,
+                                "turnsPerFrame": 2,
                                 "pinAmount": 10
                              };
             this._players = [];
             this._pinsLeft = this._settings.pinAmount;
+            this._results = [];
 
         };
 
@@ -25,10 +26,10 @@
             init: function init() {
 
                 // the game requires at least one player
-                if(_players.length == 0) throwCustomError('BadPlayerAmount', 'The game requires at least one player.');
+                if(this._players.length == 0) throwCustomError('BadPlayerAmount', 'The game requires at least one player.');
 
                 // automatically play the game
-                this.autoPlay();
+                this.autoPlayFullGame();
 
             },
 
@@ -47,18 +48,46 @@
 
             },
 
-            autoPlay: function autoPlay() {
+            autoPlayFullGame: function autoPlayFullGame() {
 
                 var currentFrame;
+                var currentPlayerIndex;
+                var currentTurn;
 
                 // in each frame
                 for(currentFrame = 1; currentFrame <= this._settings.frameAmount; currentFrame++) {
 
                     // each player
+                    for(currentPlayerIndex = 0; currentPlayerIndex < this._players.length; currentPlayerIndex++) {
 
                         // rolls his turns
+                        for(currentTurn = 1; currentTurn <= this._settings.turnsPerFrame; currentTurn++) {
+
+                            this.performTurn(currentPlayerIndex, currentFrame, currentTurn);
+
+                        }
+
+                    }
 
                 }
+
+            },
+
+            performTurn: function performTurn(playerIndex, frameNumber, turnNumber) {
+
+                var turnResult;
+
+                turnResult = this.roll();
+
+                this._results.push({
+                    frame:  frameNumber,
+                    turn:   turnNumber,
+                    playerIndex:    playerIndex,
+                    result:         turnResult
+                });
+
+                // reset pins for next player
+                if(turnNumber === this._settings.turnsPerFrame) this._pinsLeft = this._settings.pinAmount;
 
             }
 
@@ -101,6 +130,7 @@
     gameInstance = new Game();
     gameInstance.addPlayer(new Player('Peter Pan'));
     gameInstance.addPlayer(new Player());
-    console.log(gameInstance._players);
+    gameInstance.init();
+    console.log(gameInstance._results);
 
 })();
