@@ -18,6 +18,7 @@
             this._players = [];
             this._pinsLeft = this._settings.pinAmount;
             this._results = [];
+            this._breakTurn = false;
 
         };
 
@@ -44,10 +45,6 @@
                 return pins;
             },
 
-            calculatePlayerScore: function calculatePlayerScore(playerIndex) {
-
-            },
-
             autoPlayFullGame: function autoPlayFullGame() {
 
                 var currentFrame;
@@ -64,6 +61,10 @@
                         for(currentTurn = 1; currentTurn <= this._settings.turnsPerFrame; currentTurn++) {
 
                             this.performTurn(currentPlayerIndex, currentFrame, currentTurn);
+                            if(this._breakTurn) {
+                                this._breakTurn = false;
+                                break;
+                            }
 
                         }
 
@@ -76,45 +77,69 @@
             performTurn: function performTurn(playerIndex, frameNumber, turnNumber) {
 
                 var turnResult;
+                var turnResultWithBonus;
 
                 turnResult = this.roll();
+                turnResultWithBonus = this.calculateTurnScore(playerIndex, turnResult, turnNumber);
 
                 this._results.push({
                     frame:  frameNumber,
                     turn:   turnNumber,
                     playerIndex:    playerIndex,
-                    result:         turnResult
+                    result:         turnResult,
+                    resultWithBonus: turnResultWithBonus
                 });
+
+                // bonuses only apply to next round
+                this.checkForStrike(turnNumber, playerIndex);
+                this.checkForSpare(turnNumber, playerIndex);
 
                 // reset pins for next player
                 if(turnNumber === this._settings.turnsPerFrame) this._pinsLeft = this._settings.pinAmount;
 
             },
 
-            checkForSpare: function checkForSpare(turnNumber, playerIndex) {
+            calculateTurnScore: function calculatePlayerScore(playerIndex, turnResult, turnNumber) {
 
-                var spare = false;
-
-                if(turnNumber !== 1 && this._pinsLeft === 0) {
-                    spare = true;
-                    this._players[playerIndex].hadSpare = 1;
+                // had spare
+                if(this._players[playerIndex].hadSpare) {
+                    turnResult += turnResult;
+                    this._players[playerIndex].hadSpare = 0;
                 }
 
-                return spare;
+                // had strike
+                if(this._players[playerIndex].hadStrike) {
+                    turnResult += turnResult;
+                    if(turnNumber === this._settings.turnsPerFrame) this._players[playerIndex].hadStrike = 0;
+                }
+
+                return turnResult;
+
+            },
+
+            checkForSpare: function checkForSpare(turnNumber, playerIndex) {
+
+                if(turnNumber !== 1 && this._pinsLeft === 0) {
+                    this._players[playerIndex].hadSpare = 1;
+
+                    this.endTurn();
+                }
 
             },
 
             checkForStrike: function checkForStrike(turnNumber, playerIndex) {
 
-                var strike = false;
-
                 if(turnNumber === 1 && this._pinsLeft === 0) {
-                    strike = true;
                     this._players[playerIndex].hadStrike = 1;
+
+                    this.endTurn();
                 }
 
-                return strike;
+            },
 
+            endTurn: function endTurn() {
+                this._breakTurn = true;
+                this._pinsLeft = this._settings.pinAmount;
             }
 
         };
