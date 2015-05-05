@@ -272,7 +272,6 @@
                 if(!doc) {
                     doc = document.querySelector('.player-'+playerIndex+' .frame-'+frameNumber);
                     doc.innerHTML = doc.innerHTML + '<span class="bonus small">['+score+']</span> ';
-                    console.log(doc);
                 }else {
                     doc.innerHTML = score;
                 }
