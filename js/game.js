@@ -40,7 +40,7 @@
             init: function init() {
 
                 // the game requires at least one player
-                if(this._players.length == 0) throwCustomError('BadPlayerAmount', 'The game requires at least one player.');
+                if(this._players.length === 0) throwCustomError('BadPlayerAmount', 'The game requires at least one player.');
 
                 // draw the scoreboard
                 this.drawScoreBoard();
@@ -128,15 +128,16 @@
 
                 // had spare
                 if(this._players[playerIndex]._hadSpare) {
-                    turnResult += turnResult;
                     this.redrawTotal(playerIndex, frameNumber-1, turnResult);
+                    turnResult += turnResult;
                     this._players[playerIndex]._hadSpare = 0;
                 }
 
                 // had strike
                 if(this._players[playerIndex]._hadStrike) {
-                    turnResult += turnResult;
                     this.redrawTotal(playerIndex, frameNumber-1, turnResult);
+                    turnResult += turnResult;
+                    console.log(frameNumber);
                     if(turnNumber === this._settings.turnsPerFrame) this._players[playerIndex]._hadStrike = 0;
                 }
 
@@ -172,7 +173,7 @@
             gameLog: function gameLog(result) {
 
                 var node = document.querySelector('.js-game-log');
-                node.innerHTML = node.innerHTML + '<li>' + JSON.stringify(result) + '</li>';
+                node.innerHTML = node.innerHTML + '<li><i>' + this._players[result.playerIndex]._name + '</i> has scored <b>' + result.result + '</b> pins (Frame: '+result.frame+', Turn: '+result.turn+')</li>';
 
             },
 
@@ -188,7 +189,7 @@
 
                     html += '<tr class="player-'+playerIndex+'">';
 
-                    html += '<td><b>'+this._players[playerIndex]._name+'</b></td>';
+                    html += '<td class="text-right"><b>'+this._players[playerIndex]._name+':</b></td>';
 
                     for(currentFrame = 1; currentFrame <= this._settings.frameAmount; currentFrame++) {
 
@@ -200,7 +201,7 @@
 
                         }
 
-                        html += '<div class="text-center player-'+playerIndex+'-frame-'+currentFrame+'-total"></div>';
+                        html += '<div class="text-center turn-total player-'+playerIndex+'-frame-'+currentFrame+'-total"></div>';
 
                         html += '</td>';
 
@@ -219,10 +220,9 @@
 
             drawTurnData: function drawTurnData(playerIndex, frameNumber, turnNumber, pins) {
 
-                var frame = frameNumber;
-                var score = pins;
-                var doc;
-                var counter;
+                var score = pins,
+                    doc,
+                    counter;
 
                 if(this._drawSymbol === '/' || this._drawSymbol === 'X') {
                     doc = document.querySelectorAll('.player-'+playerIndex+' .frame-'+frameNumber+' .badge');
@@ -236,7 +236,7 @@
                 doc = document.querySelector('.player-'+playerIndex+'-frame-'+frameNumber+'-roll-'+turnNumber);
                 doc.innerHTML = score;
 
-                doc = document.querySelector('.player-'+playerIndex+'-frame-'+frame+'-total');
+                doc = document.querySelector('.player-'+playerIndex+'-frame-'+frameNumber+'-total');
                 doc.innerHTML = this._players[playerIndex]._totalScore;
 
             },
@@ -289,8 +289,7 @@
      * Game creation
      */
     gameInstance = new Game();
-    gameInstance.addPlayer(new Player('Peter Pan'));
-    gameInstance.addPlayer(new Player());
+    gameInstance.addPlayer(new Player('Hannes S.'));
     gameInstance.init();
 
 })();
