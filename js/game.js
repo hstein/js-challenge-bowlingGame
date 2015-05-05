@@ -86,6 +86,11 @@
 
                     }
 
+                    // bonus turns
+                    if(currentFrame === this._settings.frameAmount) {
+                        this.performBonusTurns(currentFrame);
+                    }
+
                 }
 
             },
@@ -124,6 +129,36 @@
 
             },
 
+            performBonusTurns: function performBonusTurns(currentFrame) {
+
+                var currentPlayerIndex,
+                    nextTurn = this._settings.turnsPerFrame + 1,
+                    currentTurn;
+
+                // each player
+                for(currentPlayerIndex = 0; currentPlayerIndex < this._players.length; currentPlayerIndex++) {
+
+                    if(this._players[currentPlayerIndex]._hadSpare) {
+
+                        this._players[currentPlayerIndex]._hadSpare = 0;
+
+                        this.performTurn(currentPlayerIndex, currentFrame, nextTurn);
+
+                    }else if(this._players[currentPlayerIndex]._hadStrike){
+
+                        this._players[currentPlayerIndex]._hadStrike = 0;
+
+                        // rolls his turns
+                        for(currentTurn = nextTurn; currentTurn < (nextTurn + this._settings.turnsPerFrame); currentTurn++) {
+                            this.performTurn(currentPlayerIndex, currentFrame, currentTurn);
+                        }
+
+                    }
+
+                }
+
+            },
+
             calculateTurnScore: function calculatePlayerScore(playerIndex, turnResult, turnNumber, frameNumber) {
 
                 // had spare
@@ -137,7 +172,6 @@
                 if(this._players[playerIndex]._hadStrike) {
                     this.redrawTotal(playerIndex, frameNumber-1, turnResult);
                     turnResult += turnResult;
-                    console.log(frameNumber);
                     if(turnNumber === this._settings.turnsPerFrame) this._players[playerIndex]._hadStrike = 0;
                 }
 
@@ -234,7 +268,14 @@
                 }
 
                 doc = document.querySelector('.player-'+playerIndex+'-frame-'+frameNumber+'-roll-'+turnNumber);
-                doc.innerHTML = score;
+
+                if(!doc) {
+                    doc = document.querySelector('.player-'+playerIndex+' .frame-'+frameNumber);
+                    doc.innerHTML = doc.innerHTML + '<span class="bonus small">['+score+']</span> ';
+                    console.log(doc);
+                }else {
+                    doc.innerHTML = score;
+                }
 
                 doc = document.querySelector('.player-'+playerIndex+'-frame-'+frameNumber+'-total');
                 doc.innerHTML = this._players[playerIndex]._totalScore;
