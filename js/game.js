@@ -89,6 +89,32 @@
                 // reset pins for next player
                 if(turnNumber === this._settings.turnsPerFrame) this._pinsLeft = this._settings.pinAmount;
 
+            },
+
+            checkForSpare: function checkForSpare(turnNumber, playerIndex) {
+
+                var spare = false;
+
+                if(turnNumber !== 1 && this._pinsLeft === 0) {
+                    spare = true;
+                    this._players[playerIndex].hadSpare = 1;
+                }
+
+                return spare;
+
+            },
+
+            checkForStrike: function checkForStrike(turnNumber, playerIndex) {
+
+                var strike = false;
+
+                if(turnNumber === 1 && this._pinsLeft === 0) {
+                    strike = true;
+                    this._players[playerIndex].hadStrike = 1;
+                }
+
+                return strike;
+
             }
 
         };
@@ -104,8 +130,10 @@
 
         var Class = function(name) {
 
-            this.name = name || 'John Doe';
-            this.totalScore = 0;
+            this._name = name || 'John Doe';
+            this._totalScore = 0;
+            this._hadSpare = 0;
+            this._hadStrike = 0;
 
         };
 
