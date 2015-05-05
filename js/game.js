@@ -1,6 +1,18 @@
 (function() {
     "use strict";
 
+    /**
+     * A bowling game implementation with
+     * the goal to visualize its scoring
+     * system. It uses random player
+     * throws and does not represent a
+     * full playable game.
+     *
+     * - in plain JavaScript
+     * - improvements:
+     *      # unit tests for production env
+     */
+
     var gameInstance;
 
     /**
@@ -19,6 +31,7 @@
             this._pinsLeft = this._settings.pinAmount;
             this._results = [];
             this._breakTurn = false;
+            this._drawSymbol = '';
 
         };
 
@@ -28,6 +41,9 @@
 
                 // the game requires at least one player
                 if(this._players.length == 0) throwCustomError('BadPlayerAmount', 'The game requires at least one player.');
+
+                // draw the scoreboard
+                this.drawScoreBoard();
 
                 // automatically play the game
                 this.autoPlayFullGame();
@@ -78,38 +94,49 @@
 
                 var turnResult;
                 var turnResultWithBonus;
+                var result;
 
                 turnResult = this.roll();
-                turnResultWithBonus = this.calculateTurnScore(playerIndex, turnResult, turnNumber);
+                turnResultWithBonus = this.calculateTurnScore(playerIndex, turnResult, turnNumber, frameNumber);
 
-                this._results.push({
+                // store results
+                result = {
                     frame:  frameNumber,
                     turn:   turnNumber,
                     playerIndex:    playerIndex,
                     result:         turnResult,
                     resultWithBonus: turnResultWithBonus
-                });
+                };
+                this._results.push(result);
+                this._players[playerIndex].addScore(turnResultWithBonus);
+
+                // use data
+                this.gameLog(result);
 
                 // bonuses only apply to next round
                 this.checkForStrike(turnNumber, playerIndex);
                 this.checkForSpare(turnNumber, playerIndex);
+
+                this.drawTurnData(playerIndex, frameNumber, turnNumber, turnResult);
 
                 // reset pins for next player
                 if(turnNumber === this._settings.turnsPerFrame) this._pinsLeft = this._settings.pinAmount;
 
             },
 
-            calculateTurnScore: function calculatePlayerScore(playerIndex, turnResult, turnNumber) {
+            calculateTurnScore: function calculatePlayerScore(playerIndex, turnResult, turnNumber, frameNumber) {
 
                 // had spare
                 if(this._players[playerIndex].hadSpare) {
                     turnResult += turnResult;
+                    this.redrawTotal(playerIndex, frameNumber-1, turnResult);
                     this._players[playerIndex].hadSpare = 0;
                 }
 
                 // had strike
                 if(this._players[playerIndex].hadStrike) {
                     turnResult += turnResult;
+                    this.redrawTotal(playerIndex, frameNumber-1, turnResult);
                     if(turnNumber === this._settings.turnsPerFrame) this._players[playerIndex].hadStrike = 0;
                 }
 
@@ -121,7 +148,7 @@
 
                 if(turnNumber !== 1 && this._pinsLeft === 0) {
                     this._players[playerIndex].hadSpare = 1;
-
+                    this._drawSymbol = '/';
                     this.endTurn();
                 }
 
@@ -131,7 +158,7 @@
 
                 if(turnNumber === 1 && this._pinsLeft === 0) {
                     this._players[playerIndex].hadStrike = 1;
-
+                    this._drawSymbol = 'X';
                     this.endTurn();
                 }
 
@@ -140,6 +167,83 @@
             endTurn: function endTurn() {
                 this._breakTurn = true;
                 this._pinsLeft = this._settings.pinAmount;
+            },
+
+            gameLog: function gameLog(result) {
+
+                var node = document.querySelector('.js-game-log');
+                node.innerHTML = node.innerHTML + '<li>' + JSON.stringify(result) + '</li>';
+
+            },
+
+            drawScoreBoard: function drawScoreBoard() {
+
+                var html = '<table class="table table-bordered">',
+                    scoreBoard,
+                    playerIndex,
+                    currentFrame,
+                    playerTurn;
+
+                for (playerIndex = 0; playerIndex < this._players.length; playerIndex++) {
+
+                    html += '<tr class="player-'+playerIndex+'">';
+
+                    html += '<td><b>'+this._players[playerIndex]._name+'</b></td>';
+
+                    for(currentFrame = 1; currentFrame <= this._settings.frameAmount; currentFrame++) {
+
+                        html += '<td class="text-center frame-'+currentFrame+'">';
+
+                        for(playerTurn = 1; playerTurn <= this._settings.turnsPerFrame; playerTurn++) {
+
+                            html += '<span class="badge player-'+playerIndex+'-frame-'+currentFrame+'-roll-'+playerTurn+'"></span> ';
+
+                        }
+
+                        html += '<div class="text-center player-'+playerIndex+'-frame-'+currentFrame+'-total"></div>';
+
+                        html += '</td>';
+
+                    }
+
+                    html += '</tr>';
+
+                }
+
+                html += '</table>';
+
+                scoreBoard = document.querySelector('.js-scoreboard');
+                scoreBoard.innerHTML = html;
+
+            },
+
+            drawTurnData: function drawTurnData(playerIndex, frameNumber, turnNumber, pins) {
+
+                var frame = frameNumber;
+                var score = pins;
+                var doc;
+                var counter;
+
+                if(this._drawSymbol === '/' || this._drawSymbol === 'X') {
+                    doc = document.querySelectorAll('.player-'+playerIndex+' .frame-'+frameNumber+' .badge');
+                    for(counter = (turnNumber-1); counter < doc.length; counter++) {
+                        doc[counter].innerHTML = '-';
+                    }
+                    score =  this._drawSymbol;
+                    this._drawSymbol = '';
+                }
+
+                doc = document.querySelector('.player-'+playerIndex+'-frame-'+frameNumber+'-roll-'+turnNumber);
+                doc.innerHTML = score;
+
+                doc = document.querySelector('.player-'+playerIndex+'-frame-'+frame+'-total');
+                doc.innerHTML = this._players[playerIndex]._totalScore;
+
+            },
+
+            redrawTotal: function redrawTotal(playerIndex, frameNumber, score) {
+                var doc = document.querySelector('.player-'+playerIndex+'-frame-'+frameNumber+'-total');
+                doc.innerHTML = parseInt(doc.innerHTML) + score;
             }
 
         };
@@ -164,6 +268,10 @@
 
         Class.prototype = {
 
+            addScore: function addScore(score) {
+                this._totalScore += score;
+            }
+
         };
 
         return Class;
@@ -184,6 +292,5 @@
     gameInstance.addPlayer(new Player('Peter Pan'));
     gameInstance.addPlayer(new Player());
     gameInstance.init();
-    console.log(gameInstance._results);
 
 })();
