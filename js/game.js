@@ -127,17 +127,17 @@
             calculateTurnScore: function calculatePlayerScore(playerIndex, turnResult, turnNumber, frameNumber) {
 
                 // had spare
-                if(this._players[playerIndex].hadSpare) {
+                if(this._players[playerIndex]._hadSpare) {
                     turnResult += turnResult;
                     this.redrawTotal(playerIndex, frameNumber-1, turnResult);
-                    this._players[playerIndex].hadSpare = 0;
+                    this._players[playerIndex]._hadSpare = 0;
                 }
 
                 // had strike
-                if(this._players[playerIndex].hadStrike) {
+                if(this._players[playerIndex]._hadStrike) {
                     turnResult += turnResult;
                     this.redrawTotal(playerIndex, frameNumber-1, turnResult);
-                    if(turnNumber === this._settings.turnsPerFrame) this._players[playerIndex].hadStrike = 0;
+                    if(turnNumber === this._settings.turnsPerFrame) this._players[playerIndex]._hadStrike = 0;
                 }
 
                 return turnResult;
@@ -147,7 +147,7 @@
             checkForSpare: function checkForSpare(turnNumber, playerIndex) {
 
                 if(turnNumber !== 1 && this._pinsLeft === 0) {
-                    this._players[playerIndex].hadSpare = 1;
+                    this._players[playerIndex]._hadSpare = 1;
                     this._drawSymbol = '/';
                     this.endTurn();
                 }
@@ -157,7 +157,7 @@
             checkForStrike: function checkForStrike(turnNumber, playerIndex) {
 
                 if(turnNumber === 1 && this._pinsLeft === 0) {
-                    this._players[playerIndex].hadStrike = 1;
+                    this._players[playerIndex]._hadStrike = 1;
                     this._drawSymbol = 'X';
                     this.endTurn();
                 }
